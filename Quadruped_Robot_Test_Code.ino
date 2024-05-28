@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
-
+#include "dataArray.h"
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 const int servonum = 12;
@@ -35,10 +35,8 @@ float stepturn[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // Foot movement in c
 // The foot positions are calibrated with their respective start positions
 const float jointangle0[12] = {alfa0, beta0, 0, alfa0, beta0, 0, alfa0, beta0, 0, alfa0, beta0, 0};
 float jointangle[12]; //Using a vector for angles, order LeftFrontAlfaBetaGamma etc
-
 #define SERVOMIN  150  // Minimum pulse length in microseconds
 #define SERVOMAX  600  // Maximum pulse length in microseconds
-
 int angleToPulse(int angle) {
   return map(angle, 0, 180, SERVOMIN, SERVOMAX);
 }
@@ -49,24 +47,64 @@ void setup() {
   pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
   delay(10);
 
-  for (int i = 0; i < servonum; i++) { 
-    servodegnew[i] = servodeg0[i];
+  for (int i = 0; i < servonum; i++) {    //servonum=12
+    servodegnew[i] = servodeg0[i];     //servodeg0[12] = {90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90}
     servodegold[i] = servodegnew[i];
     pwm.setPWM(i, 0, map(servodegnew[i], 0, 180, SERVOMIN, SERVOMAX));
   } 
+
   delay(10000);
 }
 
 void loop() {
+
   // this loop defines the basic forward, 90 degree left turn, and 90 degree right turn functions of the robot
-  moveStop();
-  delay(5000);        
-  forwardcreep();
-  delay(2000);
-  leftturn90deg();
-  delay(2000);
-  rightturn90deg();
-  delay(2000);  
+  for (int j =0; j<= arrayLength; j++ ){
+    if (arr[j]==1){
+      Serial.println("Moving down");
+      forwardcreep();
+      delay(500);
+      forwardcreep();
+      delay(500);
+      forwardcreep();
+      delay(1000);
+    }
+    if (arr[j]==0){
+      Serial.println("Moving left");
+      leftturn90deg();
+      delay(300);
+      forwardcreep();
+      delay(200);
+      forwardcreep();
+      delay(200);
+      forwardcreep();
+      delay(200);
+      rightturn90deg();
+      delay(1000);
+    }
+    if (arr[j]==2){
+      Serial.println("Moving right");
+      rightturn90deg();
+      delay(300);
+      forwardcreep();
+      delay(200);
+      forwardcreep();
+      delay(200);
+      forwardcreep();
+      delay(200);
+      leftturn90deg();
+      delay(1000);
+    }
+    if (arr[j]==3){
+      Serial.println("Moving up");
+      reversecreep();
+      delay(500);
+      reversecreep();
+      delay(500);
+      reversecreep();
+      delay(1000);
+    }
+  } 
 }
 
 void moveStop() {
@@ -381,7 +419,7 @@ void rightturn() {
 }
 
 void rightturn90deg(){
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 16; i++) {  //changed to 16
     rightturn();
   }
 }
